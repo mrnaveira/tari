@@ -1,7 +1,7 @@
 # RFC-0341: Asset Registration
 ## Asset Registration Process
 
-![status: draft](theme/images/status-draft.svg)
+![status: deprecated](theme/images/status-deprecated.svg)
 
 **Maintainer(s)**: [Philip Robinson](https://github.com/philipr-za)
 

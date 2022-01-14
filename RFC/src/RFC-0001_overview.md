@@ -109,6 +109,8 @@ If required, the digital assets layer can refer back to the base layer to tempor
 increased security. These commitments allow token owners to make attestations based on their asset state without relying completely on
 the side-chain infrastructure.
 
+![Tari two-layer architecture](theme/images/chains.png)
+
 ### Base Layer
 
 _Refer to [RFC-0100/BaseLayer](RFC-0100_BaseLayer.md) for more detail_.
@@ -229,4 +231,4 @@ The following table summarizes the defining characteristics of the Tari network 
 | 30 Mar 2019 | First draft v0.0.1                                            | CjS77    |
 | 19 Jun 2019 | Propose payment channel layer                                 | CjS77    |
 | 22 Jun 2021 | Remove payment channel layer proposal                         | SimianZa |
-| 14 Jan 2022 | Remove outdated image. Expound on Base layer responsibilities | CjS77    |
+| 14 Jan 2022 | Update image. Expound on Base layer responsibilities | CjS77    |

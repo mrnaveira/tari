@@ -1,4 +1,4 @@
-# RFC-1000/TariUseCases
+# RFC-8003/TariUseCases
 
 ## Digital Asset Framework
 

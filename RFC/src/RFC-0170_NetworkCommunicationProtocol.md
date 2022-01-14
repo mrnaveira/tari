@@ -2,7 +2,7 @@
 
 ## The Tari Communication Network and Network Communication Protocol
 
-![status: draft](theme/images/status-draft.svg)
+![status: Outdated](theme/images/status-outofdate.svg)
 
 **Maintainer(s)**: [Yuko Roodt](https://github.com/neonknight64)
 

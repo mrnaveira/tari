@@ -28,22 +28,19 @@
     - [RFC-0240: Atomic swap](RFC-0240_AtomicSwap.md)
     - [RFC-0241: XMR Atomic swap](RFC-0241_AtomicSwapXMR.md)
     - [RFC-0250: Covenants](RFC-0250_Covenants.md)
-    - [RFC-0322: Validator Node Registration](RFC-0322_VNRegistration.md)
-    - [RFC-0341: Asset registration](RFC-0341_AssetRegistration.md)
 - [RFC-0300: The Digital Assets Network](RFC-0300_DAN.md)
-
-
   - [Asset Management](AssetManagement.md)
     - [RFC-0312: High level Digital Asset Network Specification](RFC-0312_DANHighLevelSpecification.md)
     - [RFC-0311: Digital Asset templates](RFC-0311_AssetTemplates.md)
-
-  - [RFC-0340: Validator Node Consensus](RFC-0340_VNConsensusOverview.md)
+  - [Validator Nodes]()
+    - [RFC-0322: Validator Node Registration](RFC-0322_VNRegistration.md)
+    - [RFC-0340: Validator Node Consensus](RFC-0340_VNConsensusOverview.md)
   - [RFC-0360: NFT sale using MimbleWimble Invoice](RFC-0360_NFTInvoices.md)
-- [RFC-1000: Tari Use Cases](RFC-1000_TariUseCases.md)
 
 - [Proposals]()
   - [RFC-8001: Multi-party transactions](RFC-8001_MultiPartyTransactions.md)
   - [RFC-8002: Transaction protocol](RFC-8002_TransactionProtocol.md)
+  - [RFC-8003: Tari Use Cases](RFC-8003_TariUseCases.md)
 
 - [Deprecated RFCs](deprecated.md)
 
@@ -52,6 +49,7 @@
   - [RFC-0301: Namespace Registration](RFCD-0301_NamespaceRegistration.md)
   - [RFC-0302: Validator Nodes](RFCD-0302_ValidatorNodes.md)
   - [RFC-0304: Validator Node committee selection](RFCD-0304_VNCommittees.md)
+  - [RFC-0341: Asset registration](RFCD-0341_AssetRegistration.md)
   - [RFC-0345: Asset Life cycle](RFCD-0345_AssetLifeCycle.md)
   - [RFC-0500: Tari payment channels](RFCD-0500_PaymentChannels.md)
 
