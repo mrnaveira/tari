@@ -49,7 +49,7 @@ technological merits of the potential system outlined herein.
 ## Goals
 
 This Request for Comment (RFC) presents a proposal for introducing [TariScript] into the Tari base layer protocol. Tari
-Script aims to provide a general mechanism for enabling further extensions such as side chains, the DAN, one-sided
+Script aims to provide a general mechanism for enabling further extensions such as side-chains, the DAN, one-sided
 payments and atomic swaps.
 
 ## Related Requests for Comment

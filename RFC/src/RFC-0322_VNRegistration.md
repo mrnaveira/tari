@@ -55,7 +55,7 @@ The aim of this Request for Comment (RFC) is to describe Validator Node (VN) reg
 
 ## Related Requests for Comment
 
-* [RFC-0302: Validator Nodes](RFC-0302_ValidatorNodes.md)
+* [RFC-0302: Validator Nodes](RFCD-0302_ValidatorNodes.md)
 * [RFC-0304: Validator Node Committee Selection](RFC-0304_VNCommittees.md)
 * [RFC-0170: The Tari Communication Network and Network Communication Protocol](RFC-0170_NetworkCommunicationProtocol.md)
 * [RFC-0341: Asset Registration](RFC-0341_AssetRegistration.md)
