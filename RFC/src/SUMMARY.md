@@ -3,7 +3,6 @@
 [About the Tari RFC documents](about.md)
 
 - [RFC-0001: An overview of the Tari network](RFC-0001_overview.md)
-- [RFC-0010: Tari code structure and organization](RFC-0010_CodeStructure.md)
 - [RFC-0100: The Tari Base Layer](RFC-0100_BaseLayer.md)
   - [RFC-0110: Base nodes](RFC-0110_BaseNodes.md)
   - [RFC-0111: Base node architecture](RFC-0111_BaseNodeArchitecture.md)
@@ -12,7 +11,6 @@
   - [RFC-0132: Merge Mining Monero](RFC-0132_Merge_Mining_Monero.md)
   - [RFC-0140: Sync and Seeding](RFC-0140_Syncing_and_seeding.md)
   - [RFC-0150: Wallets](RFC-0150_Wallets.md)
-  - [RFC-0151: Transaction protocol](RFC-0151_TransactionProtocol.md)
   - [RFC-0152: Emoji ID](RFC-0152_EmojiId.md)
   - [RFC-0153: Staged Wallet Security](RFC-0153_StagedWalletSecurity.md)
   - [RFC-0160: Block Binary Serialization](RFC-0160_BlockSerialization.md)
@@ -43,8 +41,13 @@
   - [RFC-0360: NFT sale using MimbleWimble Invoice](RFC-0360_NFTInvoices.md)
 - [RFC-1000: Tari Use Cases](RFC-1000_TariUseCases.md)
 
+- [Proposals]()
+  - [RFC-8001: Multi-party transactions](RFC-8001_MultiPartyTransactions.md)
+  - [RFC-8002: Transaction protocol](RFC-8002_TransactionProtocol.md)
+
 - [Deprecated RFCs](deprecated.md)
 
+  - [RFC-0010: Tari code structure and organization](RFCD-0010_CodeStructure.md)
   - [RFC-0130: Mining](RFCD-0130_Mining.md)
   - [RFC-0301: Namespace Registration](RFCD-0301_NamespaceRegistration.md)
   - [RFC-0302: Validator Nodes](RFCD-0302_ValidatorNodes.md)
