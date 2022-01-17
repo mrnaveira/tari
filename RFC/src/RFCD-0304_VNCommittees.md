@@ -61,7 +61,7 @@ select the committee of [Validator Node]s
 
 ### Abstract
 [Digital Asset]s (DAs) are managed by [committee]s of nodes called [Validator Node]s (VNs), as described in 
-[RFC-0300](RFC-0300_DAN.md) and [RFC-0302](RFCD-0302_ValidatorNodes.md). During the asset creation process, described in
+[RFC-0300](RFCD-0300_DAN.md) and [RFC-0302](RFCD-0302_ValidatorNodes.md). During the asset creation process, described in
 [RFC-0341](RFC-0341D_AssetRegistration.md), the [Asset Issuer] (AI) MUST select a committee of VNs to manage their asset.
 This process consists of the following steps:
 

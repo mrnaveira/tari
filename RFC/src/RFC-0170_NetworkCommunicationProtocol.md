@@ -54,7 +54,7 @@ This document will introduce the Tari communication network and the communicatio
 ## Related RFCs
 
 * [RFC-0100: The Tari Base Layer](RFC-0100_BaseLayer.md)
-* [RFC-0300: Digital asset network](RFC-0300_DAN.md)
+* [RFC-0300: Digital asset network](RFCD-0300_DAN.md)
 
 ## Description
 

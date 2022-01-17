@@ -51,7 +51,7 @@ technological merits of the potential system outlined herein.
 ## Related Requests for Comment
 
 
-* [RFC-0300: The Digital Assets Network](RFC-0300_DAN.md)
+* [RFC-0300: The Digital Assets Network](RFCD-0300_DAN.md)
 * [RFC-0301: Namespace Registration](RFCD-0301_NamespaceRegistration.md)
 * [RFC-0311 Asset templates](RFC-0311_AssetTemplates.md)
 * [RFC-0340: Validator Node Consensus](RFC-0340_VNConsensusOverview.md)
@@ -60,7 +60,7 @@ technological merits of the potential system outlined herein.
 
 ### Introduction
 
-Tari digital assets are created on the [Digital Assets Network](RFC-0300_DAN.md), managed by a Validator Node (VN)
+Tari digital assets are created on the [Digital Assets Network](RFCD-0300_DAN.md), managed by a Validator Node (VN)
 committee, see [RFC-0340](RFC-0340_VNConsensusOverview.md), and are operated under the rules of the
 [template](RFC-0311_AssetTemplates.md) that governs the asset.
 

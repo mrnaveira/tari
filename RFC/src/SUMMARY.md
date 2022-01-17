@@ -28,9 +28,8 @@
     - [RFC-0240: Atomic swap](RFC-0240_AtomicSwap.md)
     - [RFC-0241: XMR Atomic swap](RFC-0241_AtomicSwapXMR.md)
     - [RFC-0250: Covenants](RFC-0250_Covenants.md)
-- [RFC-0300: The Digital Assets Network](RFC-0300_DAN.md)
+- [RFC-0312: High level Digital Asset Network Specification](RFC-0312_DANHighLevelSpecification.md)
   - [Asset Management](AssetManagement.md)
-    - [RFC-0312: High level Digital Asset Network Specification](RFC-0312_DANHighLevelSpecification.md)
     - [RFC-0311: Digital Asset templates](RFC-0311_AssetTemplates.md)
   - [Validator Nodes]()
     - [RFC-0322: Validator Node Registration](RFC-0322_VNRegistration.md)
@@ -46,6 +45,7 @@
 
   - [RFC-0010: Tari code structure and organization](RFCD-0010_CodeStructure.md)
   - [RFC-0130: Mining](RFCD-0130_Mining.md)
+  - [RFC-0300: The Digital Assets Network](RFCD-0300_DAN.md)
   - [RFC-0301: Namespace Registration](RFCD-0301_NamespaceRegistration.md)
   - [RFC-0302: Validator Nodes](RFCD-0302_ValidatorNodes.md)
   - [RFC-0304: Validator Node committee selection](RFCD-0304_VNCommittees.md)

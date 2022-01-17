@@ -64,23 +64,23 @@ This RFC covers a lot of ground. Therefore the intent is not to provide a detail
 entire DAN infrastructure; those are left to other RFCs; but to establish a foundation onto which the rest of the DAN
 specifications can be built.
 
-This RFC supercedes and deprecates several older RFCs:
+This RFC supersedes and deprecates several older RFCs:
+  - [RFC-0300: Digital Assets Network](RFCD-0300_DAN.md)
   - [RFC-0301: Namespace Registration](RFCD-0301_NamespaceRegistration.md)
-  - [RFC-0302: Validator Nodes](RFC-0302_ValidatorNodes.md)
-  - [RFC-0304: Validator Node committee selection](RFC-0304_VNCommittees.md)
+  - [RFC-0302: Validator Nodes](RFCD-0302_ValidatorNodes.md)
+  - [RFC-0304: Validator Node committee selection](RFCD-0304_VNCommittees.md)
   - [RFC-0345: Asset Life cycle](RFC-0345_AssetLifeCycle.md)
 
 Several RFC documents are in the process of being revised in order to fit into this proposed framework:
 
-* [RFC-0300: The Digital Assets Network](RFC-0300_DAN.md)
+* [RFC-0300: The Digital Assets Network](RFCD-0300_DAN.md)
 * [RFC-0340: Validator Node Consensus](RFC-0340_VNConsensusOverview.md)
 
 ### Motivation
 There are many ways to skin a cat.
 The philosophy guiding the approach in the RFC is one that permits
 scaling of the network to handle in the region of **1 billion messages per day** network-wide and
-**1 billion digital assets**
-with **near real-time user experience** on asset state retrieval, updating and transfer,
+**1 million digital assets** with **near real-time user experience** on asset state retrieval, updating and transfer,
 on a sufficiently decentralised and private basis.
 
 The definition of _sufficient_ here is subjective, and part of the design philosophy of Tari is that we leave it up to the
@@ -98,13 +98,82 @@ needs.
 
 ### The role of the Layer 1 base chain
 
-It's been mentioned in other RFCs ([RFC-0001])
+The Tari Overview RFC describes [the role of the base layer](./RFC-0001_overview.md#the-role-of-the-base-layer).
+In summary, the base layer maintains the integrity of the Tari cryptocurrency token, maintains a register of side-chains
+and maintains a register of Validator nodes.
+
+It does not know about or care about what happens in the side chains as long as the Tari consensus, side-chain and
+validator node rules are kept.
+
 
 ### The (side-chain)-(contract)-(validator node) relationship
 
+Every contract MUST be governed by one, and only one, Tari side-chain.
+
+Every digital asset MUST be governed by a single smart contract. This contract can be very simple or highly complex.
+
+Side-chains MUST be initiated by Asset Issuers at the time of contract creation.
+
+The side-chain consensus MUST be maintained by one or more Validator Nodes.
+
 ### Asset accounts
 
+Tari uses the UTXO model in its ledger accounting. On the other hand Tari side-chains SHOULD use an account-based system
+to track balances and state.
+
+The reasons for this are:
+* An account-based approach leads to fewer outputs on peg-in transactions. There is roughly a 1:1 ratio of users
+  to balances in an account-based system. On the other hand there are O(n) UTXOs in an output-based system where `n` are
+  the number of transactions carried out on the side-chain. When a side-chain wants to shut down, they must record a new
+  output on the base layer for every account or output (as the case may be) that they track in the peg-out transaction(s).
+  It should be self-evident that account-based systems are far scalable in the vast majority of use-cases.
+* Following on from this, Accounts scale better for micro-payment applications, where hundreds or thousands of tiny payments
+  flow between the same two parties.
+* Many DAN applications will want to track state (such as NFTs) as well as currency balances. Account-based ledgers make
+  this type of application far simpler.
+
+Tari side-chain accounts MUST be representable as, or convertible to, a valid base layer UTXO.
+
+When a side-chain pegs out, either partially (when users withdraw funds) or completely (when the side-chain shuts down),
+all balances MUST be returned to the base layer in a manner that satisfies the Tari base layer consensus rules.
+
+#### Pedersen commitments and account-based ledgers
+
+Standard Pedersen commitments are essentially useless in account-based ledgers.
+
+The reason being that since the spending keys would be common to all transactions involving a given account, it is trivial
+to use the accounting rules to cancel out the `k.G` terms from transactions and to use a pre-image attack to unblind all
+the values.
+
+An alternative approach is to rather maintain a map of public keys to a single-balance UTXOs. Thus the primary side-chain
+ledger would be a map of
+
+$$
+  k_i \cdot J = J_i \Rightarrow
+  \begin{cases}
+        j, \; \text(account update counter) \\\\
+        C_j = k_j \cdot G + v_j \cdot H, \\\\
+        d_j = \text{data}_j  
+  \end{cases}
+$$
+
+where $J_i$ represents the i-th account public key, and the private key is known only by the account holder,
+$C_j$ is balance for account _i_ after the j-th update. There is also an associated field $d_j$ that holds arbitrary
+state for the account after the j-th update.
+
+Updates to an account from a transaction involving _n_ accounts require
+
+$$
+\sum_{i, \text{before}}^n C_i + \mathrm{fee} = \sum_{i, \text{after}}^n C_i + \text{excess}
+$$
+
+
+
+
+
 ### Side-chain architecture
+
+
 
 ### Validator Node registration requirements
 

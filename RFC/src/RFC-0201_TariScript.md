@@ -56,7 +56,7 @@ payments and atomic swaps.
 
 - [RFC-0200: Base Layer Extensions](BaseLayerExtensions.md)
 - [RFC-0202: TariScript Opcodes](RFC-0202_TariScriptOpcodes.md)
-- [RFC-0300: The Tari Digital Assets Network](RFC-0300_DAN.md)
+- [RFC-0300: The Tari Digital Assets Network](RFCD-0300_DAN.md)
 
 $$
 \newcommand{\script}{\alpha} % utxo script

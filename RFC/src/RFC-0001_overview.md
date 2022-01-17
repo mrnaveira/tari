@@ -53,7 +53,7 @@ The aim of this proposal is to provide a very high-level perspective of the movi
 ## Related Requests for Comment
 
 - [RFC-0100: Base layer](RFC-0100_BaseLayer.md)
-- [RFC-0300: Digital asset network](RFC-0300_DAN.md)
+- [RFC-0300: Digital asset network](RFCD-0300_DAN.md)
 - [RFC-0310: Digital assets](RFC-0311_AssetTemplates.md)
 
 ## Description
@@ -153,7 +153,7 @@ Ultimately, the community decided to employ a hybrid mining approach. On average
 
 ### Digital Assets Network
 
-A more detailed proposal for the DAN is presented in [RFC-0300/DAN](RFC-0300_DAN.md). Digital assets
+A more detailed proposal for the DAN is presented in [RFC-0300/DAN](RFCD-0300_DAN.md). Digital assets
 _are discussed in more detail in [RFC-0310/Assets](RFC-0311_AssetTemplates.md)._
 
 The DAN is focused on achieving high speed and scalability, without compromising on security. To achieve
