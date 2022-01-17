@@ -145,27 +145,35 @@ The reason being that since the spending keys would be common to all transaction
 to use the accounting rules to cancel out the `k.G` terms from transactions and to use a pre-image attack to unblind all
 the values.
 
-An alternative approach is to rather maintain a map of public keys to a single-balance UTXOs. Thus the primary side-chain
-ledger would be a map of
+The specific protocol of user accounts in the side-chain is decided by the asset issuer.
 
-$$
-  k_i \cdot J = J_i \Rightarrow
-  \begin{cases}
-        j, \; \text(account update counter) \\\\
-        C_j = k_j \cdot G + v_j \cdot H, \\\\
-        d_j = \text{data}_j  
-  \end{cases}
-$$
+Options include:
 
-where $J_i$ represents the i-th account public key, and the private key is known only by the account holder,
-$C_j$ is balance for account _i_ after the j-th update. There is also an associated field $d_j$ that holds arbitrary
-state for the account after the j-th update.
+* Fully trusted
 
-Updates to an account from a transaction involving _n_ accounts require
+In this configuration, the side-chain is controlled by a single validator node, perhaps a server running an RDMS.
+The validator node has full visibility into the state of the side chain at all times. It may or may not share this
+state with the public. If it does not, then the situation is analogous to current Web 2.0 server applications.
 
-$$
-\sum_{i, \text{before}}^n C_i + \mathrm{fee} = \sum_{i, \text{after}}^n C_i + \text{excess}
-$$
+* Decentralised and federated
+
+In this configuration, a distributed set of validator nodes maintain the side-chain state. The set of nodes are fixed.
+If consensus between nodes is achieved using a mechanism such as HotStuff BFT, very high throughputs can be achieved.
+
+* Decentralised and censorship resistant
+
+In this configuration, the side-chain could itself be a proof-of-work blockchain. This offers maximum decentralisation,
+and censorship resistance. However, throughput will be lower.
+
+* Confidentiality
+
+As mentioned above, Pedersen commitments are not suitable for account-based ledgers. However, the [Zether] protocol
+was expressly designed to provide confidentiality in a smart-contract context. It can be combined with any of the above
+ schemes. Zether can also be extended to provide privacy by including a ring-signature scheme for transfers.
+
+
+
+[Zether]: https://eprint.iacr.org/2019/191.pdf "Zether: Towards Privacy in a Smart Contract World"
 
 
 
@@ -173,17 +181,104 @@ $$
 
 ### Side-chain architecture
 
+Side chains are registered on the base layer.
+
+Side-chains MUST be created by publishing a peg-in transaction
+Side-chain domain: The side-chain metadata is only concerned with information as it relates
+
+Information captured on the base layer:
+* the owner authority (PublicKey) - could be a multisig key
+* ?a chain id (scalar) - deterministic hash of initial contract metadata. Immutable for the life of the SC
+* contract name (UTF-8 string) 32 bytes
+* ?stake commitment - for paying Validator nodes
+* ?checkpoint number - 0 when creating SC
+* ?checkpoint hash
+* ?contract definition
 
 
 ### Validator Node registration requirements
 
+Validator nodes:
+* MUST register on the base-chain. Validator Nodes will not be able to be nominated as [authorised signers] on side-chains
+  if they have not registered on the base-chain.
+* MUST commit funds in their [Validator Node collateral].
+* MAY have to stake Tari for each contract that it validates. Asset issuers will determine the nature and amount of stake
+  required. The [Contract stake] amount needs to be variable on a contract-to-contract basis so that an efficient market
+  between asset issuers and Validator nodes can develop.
+
+It has been suggested in the past that Validator Nodes should post hardware benchmarks when registering. The problem
+with this requirement is that it is fairly trivial to game. We cannot enforce that the machine that posted the benchmark
+is the same as the one that is running validations.
+
+A better approach is to leave this to the market. A [reputation contract] can be built, on Tari, of course, that
+periodically and randomly asks Validator Nodes to perform cryptographically signed benchmarks in exchange for performance
+certificates. Nodes can voluntarily sign up for such a service and acts as a form of credential. Nodes that do not sign
+up may have trouble finding contracts to validate and might have to lower their price to get work.
+
+
 ### Contract creation flow
+
+The [Asset Owner] creates and owns a contract. Each contract runs in its own side-chain, and is managed by one or more
+[Validator nodes].
+
+There are several steps that are required to launch a new contract. They are discussed in detail below and in the various
+sub-RFCs, but the basic flow is
+
+![Contract creation flow](contract_creation_flow.png)
 
 #### The owner collects data
 
+To complete the contract creation flow, two transactions will be published on the main chain. The first is the
+[Asset Registration transaction], which also doubles as the first [checkpoint transaction].
+
+The second is the [Peg-in transaction] which formally coincides with the genesis of the side-chain.
+
+The registration transaction requires the following data:
+
+* [Asset metadata],
+* [Owner collateral],
+* [Initial contract state], or more correctly, the hash of the initial contract state,
+* [The checkpoint number], which is always zero for new assets.
+
+The peg-in transaction requires
+* a [funding commitment]. This represents a source of funds that will be paid over to validator nodes for managing the contract.
+* a list of [peg-out signers]. These are a set of public keys that are authorised to sign the peg-out transaction.
+
+
 #### Metadata specification
+[Asset metadata]: #metadata-specification
+
+The asset metadata contains all the information that base nodes need to build up and maintain the [Digital Asset Register].
+
+This allows clients to search for, interrogate and interact with Digital Assets on Tari, even though they don't technically
+exist on the base-chain. Think of the Digital Asset register as a DNS for smart contracts.
+
+The asset metadata includes:
+* The full [contract specification]. Validator nodes will use this in conjuction with the initial state to intialise and
+  then run the contract. The contract specification is immutable for the lifetime of the contract.
+* The owner's public key. This will typically be linked to a Yat so that that clients can easily ascertain who issued
+  the contract and whether the contract is legitimate.
+* The [contract name]. The name is purely informational, is OPTIONAL, does not have to be unique and is a UTF-8 string limited to 64 bytes.
+* [Delegate authority]. The delegate authority is a [TariScript] script that delegates authority for [`UpdateSigner`]
+  transactions.
 
 #### Owner Collateral
+
+The owner collateral is a small staked amount of at least `MINIMUM_OWNER_COLLATERAL`.
+The amount is hard-coded into consensus rules and is a nominal amount to prevent spam, and encourages asset owners to
+tidy up after themselves when a contract winds down.
+
+Initially, `MINIMUM_OWNER_COLLATERAL` is set at 100 Tari, but MAY be changed across network upgrades.
+
+The owner collateral MUST be present in the [Asset Registration transaction].
+
+Assuming the collateral is represented by the UTXO commitment $C = kG + vH$, the minimum requirement is verified by
+having the range-proof commit to $(k, v - v_\mathrm{min})$ rather than the usual  $(k, v)$.
+
+The owner collateral UTXO MUST have the `OWNER_COLLATERAL` output feature flag set.
+
+The owner collateral MUST be spent at every checkpoint into the new checkpoint transaction. [? - does it?]
+
 
 #### Peg-out transaction
 
@@ -202,5 +297,25 @@ $$
 #### Contract-creation time-out
 
 #### DAN contract template specification
+
+#### Validator Node collateral
+[Validator Node collateral]: #validator-node-collateral
+
+Validator Nodes MUST stake collateral as part of their registration. The amount staked can be any amount, as long as it
+is greater than `VALIDATOR_NODE_COLLATERAL`. This value is specified in the consensus code and is initially set
+at least 10,000 Tari. This value can changed in a network upgrade.
+
+The collateral stake is locked up for the entire period that the Validator Node is registered.
+The stake MUST be recovered when the validator node de-registers.
+
+This collateral cannot be slashed. There are individual contract stakes that can be slashed in response to byzantine
+validator behaviour.
+
+The primary purpose of the stake is to act as a Sybil attack deterrent.
+
+The stake is locked up for a minimum period of `MINIMUM_VALIDATION_PERIOD`. This value is initially set at three months.
+
+The requirements MUST be present in the [Validator Node registration] transaction and are enforced by consensus.
+
 
 [RFC-0001]: RFC-0001_overview.md
