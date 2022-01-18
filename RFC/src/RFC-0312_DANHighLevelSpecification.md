@@ -288,10 +288,7 @@ This transaction MUST be signed by the [Asset owner] private key.
 * Output type is `PEG-IN`
 * Funding address - the public key that accepts 'deposits' for this contract. MUST be one-sided payments
 * The contract ID (Do we know this yet [??])
-* peg-out authority
-  - num signers
-  - array[num signers] of public key
-  - threshold: min number of signers required to reach quorum
+* [Authorised signer] - A TariScript providing the requirements for peg outs and `UpdateSigner`. [?? Probably should be 2 different scripts]
 
 To be more specific, the transaction is composed as follows:
 
@@ -406,11 +403,32 @@ in the same block.
 
 #### Slashing authorised signers
 
+The list of authorised peg-out signers is provided by the [asset owner] during the [peg-in transaction], and may be
+updated in an [`UpdateSigner`] transaction.
+
+Signers accept this responsibility by committing at the contract collateral to an output which has the following spend
+conditions:
+
+* The signer is no longer part of the contract's authorised signatory list
+* The contract has been `ABANDONED`, in which case, the output is burned.
+
+
 #### Updating authorised signers
+
+There MUST always be at least `threshold` signers.
+Only a valid of [Authorised signer] can issue an `UpdateSigner` transaction.
+Since [aUthorised signer] is TariScript, this is a very flexible arrangement. It could be the asset owner only,
+a threshold of given pubkeys, some puzzle to solve. But with great power comes great responsibility!
+
 
 #### Contract-creation time-out
 
-#### DAN contract template specification
+Signers have `STAKE_ALLOWANCE_TIMEOUT` blocks to sign and stake their collateral. Initially this period is set to
+30\*24\*7 = 5040 blocks (1 week).
+
+If this period elapsed and not all signer signatures have been collected, the asset owner MAY spend the peg-in output
+back to himself to recover his funds.
+
 
 #### Validator Node collateral
 [Validator Node collateral]: #validator-node-collateral
@@ -433,4 +451,7 @@ The requirements MUST be present in the [Validator Node registration] transactio
 
 
 [RFC-0001]: RFC-0001_overview.md[Asset registration transaction]: #asset-registration-transaction
+
+#### DAN contract template specification
+
 
