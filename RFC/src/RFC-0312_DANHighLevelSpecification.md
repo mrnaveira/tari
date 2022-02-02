@@ -66,7 +66,7 @@ specifications can be built.
 
 This RFC supersedes and deprecates several older RFCs:
   - [RFC-0300: Digital Assets Network](RFCD-0300_DAN.md)
-  - [RFC-0301: Namespace Registration](RFCD-0301_NamespaceRegistration.md)
+  - [RFC-0301: Namespace Registration](RFC-0301_NamespaceRegistration.md)
   - [RFC-0302: Validator Nodes](RFCD-0302_ValidatorNodes.md)
   - [RFC-0304: Validator Node committee selection](RFCD-0304_VNCommittees.md)
   - [RFC-0345: Asset Life cycle](RFC-0345_AssetLifeCycle.md)
@@ -79,7 +79,7 @@ Several RFC documents are in the process of being revised in order to fit into t
 ### Motivation
 There are many ways to skin a cat.
 The philosophy guiding the approach in the RFC is one that permits
-scaling of the network to handle in the region of **1 billion messages per day** network-wide and
+scaling of the network to handle in the region of **1 billion messages per day** (network-wide) and
 **1 million digital assets** with **near real-time user experience** on asset state retrieval, updating and transfer,
 on a sufficiently decentralised and private basis.
 
@@ -89,32 +89,115 @@ and cost.
 
 For some assets, decentralisation and censorship resistance will be paramount, and users will be willing to live with a
 more laggy experience. Gamers in a Web 3.0-MMORPG on the other hand, want cheap, fast transactions with verifiable ownership, and
-therefore will generally be happy to sacrifice decentralisation for that.
+therefore will generally need to sacrifice decentralisation for that.
 
 The goal of the DAN is for asset issuers to be able to configure the side-chain for their project to suit their particular
 needs.
 
 ## Description
 
+There are several key actors that participate in Tari Digital Asset Network:
+
+* A tari [contract] is a piece of code that establishes the relationship and rules of engagement between one or more
+  digital assets. This includes ownership rules, transfer rules and state change rules.
+* The [Asset issuer] is the entity that defines a contract and brings it into existence.
+* [Validator node]s manage the contract on behalf of the asset issuer by executing instructions on a Tari [side-chain].
+* [Users] interact with contracts and may own, transfer or execute state change instructions against the contract by
+  submitting instructions via the Tari [comms network] to the relevant validator node committee.
+
 ### The role of the Layer 1 base chain
 
 The Tari Overview RFC describes [the role of the base layer](./RFC-0001_overview.md#the-role-of-the-base-layer).
 In summary, the base layer maintains the integrity of the Tari cryptocurrency token, maintains a register of side-chains
-and maintains a register of Validator nodes.
+and maintains a register of validator nodes.
 
 It does not know about or care about what happens in the side chains as long as the Tari consensus, side-chain and
 validator node rules are kept.
 
 
-### The (side-chain)-(contract)-(validator node) relationship
+### Top-level requirements for side-chains
 
-Every contract MUST be governed by one, and only one, Tari side-chain.
+The guiding principle of Tari digital assets are that they are managed on a dedicated side-chain. One side-chain,
+one contract.
+Other RFCs will discuss ways to overcome the apparent limitations this rule implies, including inter-asset
+interactions and asset hibernation.
 
-Every digital asset MUST be governed by a single smart contract. This contract can be very simple or highly complex.
+#### Asset issuer - validator node agreements
 
-Side-chains MUST be initiated by Asset Issuers at the time of contract creation.
+The fundamental relationship of Tari contracts is between the asset issuer and the validator node(s) that manage
+the contract's side-chain. This relationship is somewhat adversarial by nature: Issuers want high quality service at
+the lowest possible price; Validators want to be compensated for their services and under some circumstances may want
+to cheat on contracts for their own gain.
 
-The side-chain consensus MUST be maintained by one or more Validator Nodes.
+Tari seeks to address this in the lightest way possible by requiring the absolute minimum in terms of base layer governance
+while providing options for side-chain governance that suits the needs of the parties involved.
+
+For example, an asset
+issuer that wants to issue a highly decentralised, censorship-resistant _high-value_ contract on a side-chain would likely
+seek to recruit dozens of validator nodes and run a proof-of-stake consensus model with a confidential asset specification.
+
+In contrast, an asset issuer that wants to participate in the Tari ecosystem, but is not interested in decentralisation
+could run their own validator node; with no consensus, or staking, or validator node compensation contracts -- these
+would be unnecessary; and provide a high performance, real-time contract. Games with realistic embedded economics would
+follow this model, as well as early on in the transition from tradFi to deFi.
+
+A set of Validator nodes that manage the same contract is called the [validator node committee] for the contract.
+
+##### Contract instantiation
+
+* Every contract MUST be governed by one, and only one, Tari [side-chain]. A contract MAY define one or more digital assets.
+* Every contract MUST be governed by a single [smart contract]. This contract can be very simple or highly complex.
+* The contract is defined in a [contract creation] transaction.
+  * The contract creation transaction MUST provide the full contract specification, or a hash of the full contract
+    specification. This is immutable for the lifetime of the contract.
+* Validator nodes MUST cryptographically [acknowledge and agree] to manage the contract.
+* Side-chains MUST be initiated by virtue of a [peg-in] transaction.
+  * The validator node committee MUST sign and broadcast the peg-in transaction.
+  * The peg-in transaction MUST reference the contract that is being managed by the side-chain.
+  * There is a minimum side-chain deposit that MUST be included in the peg-in UTXO. This is a nominal quantity of
+    Tari that is locked up for the duration of the contract and serves as a spam deterrent.
+    It is not related to any stakes or contract funding deposits that may be required by the contract itself.
+
+##### Contract management
+
+* Validator nodes SHOULD diligently and accurately [process all instructions] related to the contract.
+* The committee SHOULD reach consensus on every instruction related to the contract. This specification does NOT dictate how this
+  consensus is reached. If the committee contains one member, then consensus is trivial, and does not require any complicated
+  consensus algorithms. A standard web-based application stack will suffice in most cases.
+  Larger committees can choose from any manner of consensus algorithms, including PBFT, HotStuff, proof-of-stake or
+ proof-of-work.
+
+__OPEN QUESTION__: The asset issuer has no in-band way to know how the VNs are reaching consensus. Even out-of-band,
+ there could be one server and a bunch of proxies that merely relay messages. Only proof of work (because it is permissionless)
+ and proof of stake (maybe?) work around this problem. We need some sort of proof-of-uniqueness mechanism here... :thinking:
+
+* The validator node committee MUST post periodic [checkpoints] onto the base layer.
+* The checkpoint MUST include a [summary of the contract state]. This summary SHOULD be in the form of a Merklish Root.
+* The checkpoint MUST include [refund information] for Tari holders in the side-chain.
+* If a valid checkpoint is not posted within the maximum allowed timeframe, the contract is [abandoned]. This COULD lead
+  to penalties and stake slashing if enabled within the contract specification.
+* A checkpoint MAY define [validator node committee updates].
+
+The Tari base layer does not get involved in governance issues. However, many asset issuers may want to include mechanisms
+that, for example, require a Tari stake to act as a validator node. Validator nodes may also desire a compensation
+mechanism so that they get paid for managing the contract. These mechanisms form part of the contract itself, and are
+opaque to the machinery of the base layer, side-chain and associated peg transactions.
+
+Tari [contract]s are template-based, and so many contracts may wish to include templates that add one or more of the
+following functionality to the side-chain contract:
+
+* A Validator node [proof-of-participation certificate] template. Poorly performing validator nodes may receive reduced compensation,
+  be fined, or even ejected from the committee at a checkpoint.
+* An asset financing template. The asset issuer could provide a guaranteed pool of funds from which the committee will
+  be paid at every checkpoint.
+* Tari account template. This template would provide the ability for users to deposit Tari into a side-chain and withdraw
+  funds at checkpoints.
+
+This list is far from complete, but should convey the idea that:
+* Tari contracts SHOULD be highly modular and composable, with each template performing exactly ONE highly specific
+  task, and doing it very well.
+* The base layer and peg transactions know the absolute minimum about the assets on the chain. However, they provide
+  all the information necessary for the contract templates and side-chains to function efficiently.
 
 ### Asset accounts
 
