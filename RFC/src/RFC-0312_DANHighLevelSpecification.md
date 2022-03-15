@@ -185,8 +185,8 @@ A set of Validator nodes that manage the same contract is called the _validator 
 * Every contract MUST be governed by one, and only one, Tari [side-chain]. A contract MAY define one or more digital assets.
   This contract can be very simple or highly complex.
 * The contract is defined in a [contract definition transaction].
-  * The contract defintion transaction MUST provide the full contract specification, or a hash of the full contract
-    specification. This is immutable for the lifetime of the contract.
+  * The contract definition transaction MUST provide the full contract specification, or a hash of the full contract
+    specification and initial data. This is immutable for the lifetime of the contract.
 * Validator nodes MUST cryptographically [acknowledge and agree] to manage the contract.
 * Side-chains MUST be initiated by virtue of a [peg-in] transaction.
   * The validator node committee MUST sign and broadcast the peg-in transaction.
@@ -197,7 +197,7 @@ A set of Validator nodes that manage the same contract is called the _validator 
   * There MUST also be a funding UTXO associated with the peg-in transaction. This UTXO represents the total initial
     balance of all Tari [contract user accounts] in the side-chain. This is a standard Pedersen commitment, so the value
     is unknown, and it MAY be zero, if Tari accounts are not required in the side-chain contract.
-    This UTXO MUST only be spendable in a checkpoint transaction.
+    This UTXO MUST only be spendable in a checkpoint transaction for this contract.
 
 ##### Contract management
 
@@ -255,23 +255,63 @@ This list is far from complete, but should convey the idea that:
    via a DEX, DAO or other marketplace. The VNs could also be owned by the issuer itself.
 3. A new side-chain for the contract is created via the publishing of a [peg-in transaction].
 
-#### Contract creation transaction
-[contract creation transaction]: #contract-creation-transaction
+#### Contract definition transaction
+[contract definition transaction]: #contract-definition-transaction
 
 * Every contract MUST be registered on the base layer.
-* Contracts MUST be registered by publishing a `contract creation` transaction.
-* The following information must be captured as part of the `contract creation` transaction
-  * the asset issuer, also known as the owner public key, `<PublicKey>`.
-  * The contract id -- `<u256 hash>`. This is immutable for the life of the contract and is calculated as
-    `H(contract_name || contract specification hash || Initial data hash)`.
-  * A contract name -- `utf-8 char[32]`(UTF-8 string) 32 bytes. This is for informational purposes only, so it shouldn't
-    be too long, but not too short that it's not useful (this isn't DOS 3.1 after all). 32 bytes is the same length as
-    a public key or hash, so feels like a reasonable compromise.
-* The [contract definition]. This is either the full contract definition, or the hash of the full contract definition.
+* Contracts MUST be registered by publishing a `contract definition` transaction.
+* The following information must be captured as part of the `contract definition` transaction in a contract 
+  definition UTXO:
+  * Exactly ONE output MUST have a `ContractDefintion` output feature.
+  * A `ContractDefintion` UTXO has the following information:
+    * the asset issuer's public key, also known as the owner public key, `<PublicKey>`.
+    * The contract id -- `<u256 hash>`. This is immutable for the life of the contract and is calculated as
+      `H(contract_name || contract specification hash || Initial data hash)`.
+    * A contract name -- `utf-8 char[32]`(UTF-8 string) 32 bytes. This is for informational purposes only, so it shouldn't
+      be too long, but not too short that it's not useful (this isn't DOS 3.1 after all). 32 bytes is the same length as
+      a public key or hash, so feels like a reasonable compromise.
 
-_Thought_: Should we also allow registration of contracts themselves on the base layer? You notarise the code / github
-commit / `.so hash` so that nodes can verify that they're running the right code; and there's a clear upgrade path, since
-there's a code-chain from one version of a contract template to the next. Does this live on the base layer, or as a side-chain?
+* The [contract code definition]:
+  * Version number (contract code definition can be upgraded)
+  * The template hash being implemented
+  
+* The [contract code definition] also includes the initial state (hash?) for the contract.
+  * e.g. all the sub-templates and their state.
+
+
+```nocompile
+pub trait Template {
+  fn interface() -> InterfaceDefinition
+  fn supportsInterface(iface) -> bool
+}
+```
+
+#### Template code registration and versioning
+
+The code template implementations MUST be registered on the base layer.
+
+The reason for this is that it allows Validator Nodes to know unequivocally that they are all running the same code
+and can expect the same output for the same input.
+
+Side note: We should also provide some way for VNs to know which version of the execution engine they should be running
+for a given contract.
+
+Template registration also allows us to implement a secure and trust-minimised upgrade mechanism for templates. 
+
+Potentially, we could even introduce a mechanism wherein template developers get paid for people using their template.
+
+Template registration UTXO would contain:
+* A link to the code (git commit or IPFS)
+* The type of code (source or binary blob)
+* A hash of the source code / blob
+* Version info.
+* Execution engine requirements (similar to solc pragma)
+
+There's a clear upgrade path, since
+there's a code-chain from one version of a contract template to the next.
+
+
+
 
 #### Asset issuer
 [asset issuer]: #asset_issuer
@@ -302,13 +342,6 @@ having the range-proof commit to $(k, v - v_\mathrm{min})$ rather than the usual
 
 #### Validator node
 [Validator node]: #validator-node
-
-Validator nodes:
-
-* MUST register on the base-chain. Validator Nodes will not be able to be nominated as [authorised signers] on side-chains
-  if they have not registered on the base-chain.
-* MUST stake a nominal amount of Tari in a UTXO as part of the node registration transaction. This is an anti-spam
-  measure and is not related to any finds a node must stake as part of its obligations in managing a contract.
 
 Validator nodes should expect to have to stake Tari for each contract they validate. Asset issuers will determine the
 nature and amount of stake required. The contract stake should be variable on a contract-to-contract basis so that an efficient market
