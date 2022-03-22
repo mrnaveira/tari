@@ -185,19 +185,39 @@ A set of Validator nodes that manage the same contract is called the _validator 
 * Every contract MUST be governed by one, and only one, Tari [side-chain]. A contract MAY define one or more digital assets.
   This contract can be very simple or highly complex.
 * The contract is defined in a [contract definition transaction].
+  * This transaction defines the "what" of the digital asset set that will be created. 
   * The contract definition transaction MUST provide the full contract specification, or a hash of the full contract
     specification and initial data. This is immutable for the lifetime of the contract.
+* The asset issuer broadcasts a [validator committee proposal] transaction.
+  * This transaction defines the "how" and "who" of the digital asset's management.
+  * It links to the contract definition UTXO.
+  * This transaction contains the "contract terms" for the management of the contract.
+  * This transaction contains the public keys of the proposed VN committee; 
+  * a expiry date before which all the VNs must sign and agree to these terms (the [acceptance period]]); 
+  * quorum conditions for acceptance of this proposal (default to 100%);
+  * this MUST be achieved by the asset issuer providing a UTXO that can only be spent by a multisig of the quorum of
+    VNS performing a peg-in. There MAY be an [initial reward] that is paid to the VN committee when the UTXO is spent.
+  * part of this agreement MAY be a [side-chain deposit] amount that needs to be committed as part of the [peg-in];
+  * quorum conditions for peg-outs (e.g. I require a 3 of 5 threshold signature); In this instance peg-outs refer to an exit
+    of the entire side-chain. We envisage that depositing and withdrawing funds into / out of the SC can be done via
+    a template and will vary depending on the template (e.g. custodial vs self-custody / refund tx).
+  * The advertised consensus model for the side chain (this can't be enforced, but can be checked); 
+  * Checkpoint parameters, including, frequency, rules around committee changes.
 * Validator nodes MUST cryptographically [acknowledge and agree] to manage the contract.
+  * Each VN publishes a [contract acceptance transaction] committing the required stake. The UTXO is also an explicit 
+    agreement to manage the contract.
+  * In a PoW side chain, we still need a VN to act as "checkpoint publisher", so this step is still required for PoW 
+    chains.
+  * The UTXO has a time lock, that prevents the VN spending the UTXO before the [acceptance period] + [peg-in period] 
+    has lapsed.
 * Side-chains MUST be initiated by virtue of a [peg-in] transaction.
-  * The validator node committee MUST sign and broadcast the peg-in transaction.
-  * The peg-in transaction MUST reference the contract that is being managed by the side-chain.
-  * There is a minimum [side-chain deposit] that MUST be included in the peg-in UTXO. This is a nominal quantity of
-    Tari that is locked up for the duration of the contract and serves as a spam deterrent.
-    It is not related to any stakes or contract funding deposits that may be required by the contract itself.
-  * There MUST also be a funding UTXO associated with the peg-in transaction. This UTXO represents the total initial
-    balance of all Tari [contract user accounts] in the side-chain. This is a standard Pedersen commitment, so the value
-    is unknown, and it MAY be zero, if Tari accounts are not required in the side-chain contract.
-    This UTXO MUST only be spendable in a checkpoint transaction for this contract.
+  * Once the [acceptance period] has expired, [peg-in period] begins.
+  * At this point, there MUST be a quorum of acceptance transactions from validator nodes. 
+    validator node committee MUST collaborate to produce, sign and broadcast the peg-in transaction by spending the 
+    [initial reward]. This also serves the purpose of linking the peg-in to the specific contract that is being 
+    managed by the side-chain.
+  * There is a minimum [side-chain deposit] that MUST be included in the peg-in UTXO. A single aggregated UTXO 
+    containing at least $$ m D $$ Tari, where _m_ is the number of VNs and _D_ is the deposit required.
 
 ##### Contract management
 
@@ -271,20 +291,12 @@ This list is far from complete, but should convey the idea that:
       be too long, but not too short that it's not useful (this isn't DOS 3.1 after all). 32 bytes is the same length as
       a public key or hash, so feels like a reasonable compromise.
 
-* The [contract code definition]:
+* The [!]:
   * Version number (contract code definition can be upgraded)
   * The template hash being implemented
   
 * The [contract code definition] also includes the initial state (hash?) for the contract.
   * e.g. all the sub-templates and their state.
-
-
-```nocompile
-pub trait Template {
-  fn interface() -> InterfaceDefinition
-  fn supportsInterface(iface) -> bool
-}
-```
 
 #### Template code registration and versioning
 
@@ -370,9 +382,6 @@ up may have trouble finding contracts to validate and might have to lower their 
 * checkpoint hash
 * ?contract definition
 
-#### Peg-in transaction
-[peg-in]: #peg-in-transaction
-[acknowledge and agree]: #peg-in-transaction
 
 #### Contract user accounts
 [contract user accounts]: #contract-user-accounts
