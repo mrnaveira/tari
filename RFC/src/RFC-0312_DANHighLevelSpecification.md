@@ -210,6 +210,15 @@ A set of Validator nodes that manage the same contract is called the _validator 
     chains.
   * The UTXO has a time lock, that prevents the VN spending the UTXO before the [acceptance period] + [peg-in period] 
     has lapsed.
+* Once the [acceptance period] has expired, [peg-in period] begins.
+  * At this point, VNs that have accepted the contract must 
+    * allocate resources
+    * Setup whatever is needed to run the contract
+    * Set up consensus with their peer VNs (e.g. hotstuff)
+    * Intialise the contract and run the constructors
+    * Reach consensus on the initial state.
+    * Prepare the [peg-in] transaction.
+  * all before the [peg-in] period expires.
 * Side-chains MUST be initiated by virtue of a [peg-in] transaction.
   * Once the [acceptance period] has expired, [peg-in period] begins.
   * At this point, there MUST be a quorum of acceptance transactions from validator nodes. 
@@ -218,6 +227,21 @@ A set of Validator nodes that manage the same contract is called the _validator 
     managed by the side-chain.
   * There is a minimum [side-chain deposit] that MUST be included in the peg-in UTXO. A single aggregated UTXO 
     containing at least $$ m D $$ Tari, where _m_ is the number of VNs and _D_ is the deposit required.
+  * This transaction also acts as the zero-th checkpoint for the contract. As such, it requires all the checkpoint 
+    information.
+  * The state commitment is the merklish root of the state after running the code initialisation using the [initial 
+    data] provided in the [contract definition].
+* Validator nodes MUST periodically sign and broadcast a [checkpoint] transaction.
+  * The checkpoint UTXO MUST have the `CHECKPOINT` output feature.
+  * It contains the [contract_id]
+  * This feature contains a commitment to the current contract state. This is typically some sort of Merklish root.
+  * A checkpoint number, strictly increasing by 1 form the previous checkpoint
+  * The checkpoint MUST spend the previous checkpoint. This is guaranteed by virtue of a covenant.
+  * The checkpoint UTXO contains a covenant that provides the spending conditions described above.
+  * Checkpoints allow the exit and entrance of new validator nodes into the committee.
+* A checkpoint MAY introduce a new Validator Node public key into the VN committee
+  * The conditions for adding a new key to the VN committee set are specified in the [contract definition]
+  * Note: At the minimum, there's a proposal step, a validation step, an acceptance step, and an activation step.
 
 ##### Contract management
 
