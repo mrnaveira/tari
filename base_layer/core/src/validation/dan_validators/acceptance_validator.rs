@@ -1,4 +1,4 @@
-//  Copyright 2022, The Tari Project
+//  Copyright 2022, The Tari&& Project
 //
 //  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 //  following conditions are met:
@@ -195,10 +195,31 @@ pub fn fetch_constitution_commitment<B: BlockchainBackend>(
 mod test {
     use std::convert::TryInto;
 
-    use tari_common_types::types::{Commitment, PublicKey};
+    use tari_common_types::types::{Commitment, FixedHash, PrivateKey, PublicKey, RangeProof, Signature};
+    use tari_crypto::{
+        commitment::{ExtendedHomomorphicCommitmentFactory, ExtensionDegree},
+        extended_range_proof::ExtendedRangeProofService,
+        ristretto::{
+            bulletproofs_plus::{
+                BulletproofsPlusService,
+                RistrettoAggregatedPublicStatement,
+                RistrettoExtendedMask,
+                RistrettoExtendedWitness,
+                RistrettoStatement,
+            },
+            pedersen::extended_commitment_factory::ExtendedPedersenCommitmentFactory,
+        },
+        signatures::CommitmentSignature,
+    };
+    use tari_script::TariScript;
+    use tari_utilities::ByteArray;
 
     use super::fetch_constitution_commitment;
     use crate::{
+        covenants::Covenant,
+        transactions::{
+            transaction_components::{EncryptedValue, OutputFeatures, TransactionOutput},
+        },
         txn_schema,
         validation::dan_validators::test_helpers::{
             assert_dan_validator_fail,
@@ -379,5 +400,70 @@ mod test {
 
         // try to validate the acceptance transaction and check that we get the error
         assert_dan_validator_fail(&blockchain, &tx, "Invalid acceptance signature");
+    }
+
+    #[test]
+    fn bulletproof_validates_stake() {
+        let value = 100_u64;
+        let required_stake = 100_u64;
+
+        // init the service
+        let bit_length = 64usize;
+        let aggregation_size = 1usize;
+        let extension_degree = ExtensionDegree::DefaultPedersen;
+
+        let factory = ExtendedPedersenCommitmentFactory::new_with_extension_degree(extension_degree).unwrap();
+        let bullet_proofs_plus_service =
+            BulletproofsPlusService::init(bit_length, aggregation_size, factory.clone()).unwrap();
+
+        // create the proof
+        // it will be done by the wallet when creating an acceptance transaction
+        let secrets = vec![PrivateKey::default(); extension_degree as usize];
+        let extended_mask = RistrettoExtendedMask::assign(extension_degree, secrets.clone()).unwrap();
+        let commitment = factory.commit_value_extended(&secrets, value).unwrap();
+
+        let extended_witness = RistrettoExtendedWitness {
+            mask: extended_mask,
+            value,
+            minimum_value_promise: required_stake,
+        };
+        let (seed_nonce, _) = create_random_key_pair();
+        let proof = bullet_proofs_plus_service
+            .construct_extended_proof(vec![extended_witness], Some(seed_nonce))
+            .unwrap();
+
+        // create the UTXO
+        // it will also be done on the wallet
+        let features =
+            OutputFeatures::for_contract_acceptance(FixedHash::default(), PublicKey::default(), Signature::default());
+        let _utxo = TransactionOutput::new_current_version(
+            features,
+            commitment.clone(),
+            RangeProof::from_bytes(&proof).unwrap(),
+            TariScript::default(),
+            PublicKey::default(),
+            CommitmentSignature::default(),
+            Covenant::default(),
+            EncryptedValue::default(),
+        );
+
+        // verify the proof
+        // it will be done by base layer when validating an acceptance transaction
+        let statement_public = RistrettoAggregatedPublicStatement::init(vec![RistrettoStatement {
+            commitment,
+            minimum_value_promise: required_stake,
+            // minimum_value_promise: required_stake + 1, // this makes the proof fail, as expected
+        }])
+        .unwrap();
+
+        // verify the proof directly
+        assert!(bullet_proofs_plus_service
+            .verify_batch(vec![&proof], vec![&statement_public])
+            .is_ok());
+
+        // verify the proof from the UTXO value
+        // this does not work as there is not a way to pass a Statement
+        // so the verification will need to be done with the "verify_batch" function
+        // assert!(utxo.verify_range_proof(&bullet_proofs_plus_service).is_ok());
     }
 }
