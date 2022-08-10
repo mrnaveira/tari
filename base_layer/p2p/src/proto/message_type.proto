@@ -29,8 +29,9 @@ enum TariMessageType {
 
     // -- DAN Messages --
     TariMessageTypeDanConsensusMessage = 101;
-    // -- Extended --
+    TariMessageTypeDanMempoolTransaction = 102;
 
+    // -- Extended --
     TariMessageTypeText = 225;
     TariMessageTypeTextAck = 226;
 
