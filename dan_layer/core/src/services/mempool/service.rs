@@ -46,15 +46,21 @@ pub trait MempoolService: Sync + Send + 'static {
 
 pub struct ConcreteMempoolService {
     instructions: Vec<(Instruction, Option<TreeNodeHash>)>,
-    outbound_service: Box<dyn MempoolOutboundService>,
+    outbound_service: Option<Box<dyn MempoolOutboundService>>,
 }
 
 impl ConcreteMempoolService {
-    pub fn new(outbound_service: Box<dyn MempoolOutboundService>) -> Self {
+    pub fn new() -> Self {
         Self {
             instructions: vec![],
-            outbound_service,
+            outbound_service: None,
         }
+    }
+}
+
+impl Default for ConcreteMempoolService {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -63,7 +69,11 @@ impl MempoolService for ConcreteMempoolService {
     async fn submit_instruction(&mut self, instruction: Instruction) -> Result<(), DigitalAssetError> {
         // TODO: validate the instruction
         self.instructions.push((instruction.clone(), None));
-        self.outbound_service.propagate_instruction(instruction).await?;
+
+        if let Some(outbound_service) = &mut self.outbound_service {
+            outbound_service.propagate_instruction(instruction).await?;
+        }
+
         Ok(())
     }
 
@@ -137,12 +147,22 @@ pub struct MempoolServiceHandle {
 }
 
 impl MempoolServiceHandle {
-    pub fn new(outbound_service: Box<dyn MempoolOutboundService>) -> Self {
-        let mempool_service = ConcreteMempoolService::new(outbound_service);
+    pub fn new() -> Self {
+        let mempool_service = ConcreteMempoolService::new();
 
         Self {
             mempool: Arc::new(Mutex::new(mempool_service)),
         }
+    }
+
+    pub async fn set_outbound_service(&mut self, outbound_service: Box<dyn MempoolOutboundService>) {
+        self.mempool.lock().await.outbound_service = Some(outbound_service);
+    }
+}
+
+impl Default for MempoolServiceHandle {
+    fn default() -> Self {
+        Self::new()
     }
 }
 

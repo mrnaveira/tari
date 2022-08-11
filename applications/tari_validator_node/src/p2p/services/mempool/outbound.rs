@@ -12,16 +12,16 @@ use tari_p2p::tari_message::TariMessageType;
 
 use crate::p2p::proto::validator_node::InvokeMethodRequest;
 
-const LOG_TARGET: &str = "tari::validator_node::p2p::services::mempool_outbound_service";
+const LOG_TARGET: &str = "tari::validator_node::p2p::services::mempool::outbound";
 
 pub struct TariCommsMempoolOutboundService {
-    outbound_message_requester: Option<OutboundMessageRequester>,
+    outbound_message_requester: OutboundMessageRequester,
 }
 
 impl TariCommsMempoolOutboundService {
-    pub fn new() -> Self {
+    pub fn new(outbound_message_requester: OutboundMessageRequester) -> Self {
         Self {
-            outbound_message_requester: None,
+            outbound_message_requester,
         }
     }
 }
@@ -29,11 +29,6 @@ impl TariCommsMempoolOutboundService {
 #[async_trait]
 impl MempoolOutboundService for TariCommsMempoolOutboundService {
     async fn propagate_instruction(&mut self, instruction: Instruction) -> Result<(), DigitalAssetError> {
-        let outbound_message_requester = match &mut self.outbound_message_requester {
-            Some(requester) => requester,
-            None => return Ok(()),
-        };
-
         let destination = NodeDestination::Unknown;
         let encryption = OutboundEncryption::ClearText;
         let exclude_peers = vec![];
@@ -49,7 +44,8 @@ impl MempoolOutboundService for TariCommsMempoolOutboundService {
 
         let message = OutboundDomainMessage::new(&TariMessageType::DanMempoolTransaction, req);
 
-        let result = outbound_message_requester
+        let result = self
+            .outbound_message_requester
             .flood(destination, encryption, exclude_peers, message)
             .await;
 
